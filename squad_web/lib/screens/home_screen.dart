@@ -1,5 +1,7 @@
 // home_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../widgets/code_layer.dart';
 import '../widgets/dummy_generation.dart';
@@ -16,7 +18,7 @@ class QuantumHomePage extends StatefulWidget {
 }
 
 class _QuantumHomePageState extends State<QuantumHomePage> {
-  String selectedTargetCode = 'SE';
+  Set<String> selectedTargetCodes = {'SE'};
   Set<String> selectedDummyCodes = {'PQC', 'MEA'};
   String selectedLayer = 'StateEncoder';
   int numberOfDummies = 5;
@@ -30,21 +32,63 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
 
   final nQubitsController = TextEditingController(text: '6');
   final batchSizeController = TextEditingController(text: '1');
-  final deviceController = TextEditingController(text: 'cuda 0');
+  final deviceController = TextEditingController(text: 'cuda:0');
   final epochsController = TextEditingController(text: '5');
   final optimizerController = TextEditingController(text: 'Adam');
   final lrController = TextEditingController(text: '1e-4');
 
   Widget _divider() => Divider(color: Colors.grey[700], thickness: 1.0);
 
-  void generateDummies() {
+  Future<void> generateDummies() async {
     setState(() {
-      dummyList =
-          List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
-      for (final dummy in dummyList) {
-        log.add('>: $dummy split learning started ... Done!');
-      }
+      log.add('>: Starting API request...');
     });
+
+    final queryParams = {
+      'target_parts': selectedTargetCodes.join(','),
+      'n_qubits': nQubitsController.text,
+      'variant_counts': '3',
+      'sample_count': '10',
+      'dummy_codes': selectedDummyCodes.join(','),
+      'layer': selectedLayer,
+      'batch_size': batchSizeController.text,
+      'device': deviceController.text,
+      'epochs': epochsController.text,
+      'optimizer': optimizerController.text,
+      'lr': lrController.text,
+      'num_dummies': numberOfDummies.toString(),
+    };
+
+    try {
+      final uri = Uri.http('127.0.0.1:8000', '/run-multi-test', queryParams);
+      
+      setState(() {
+        log.add('>: Sending GET request to: $uri');
+      });
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          log.add('>: API request successful!');
+          log.add('>: Response: ${response.body}');
+          // Assuming the response gives us a list of dummies to populate
+          // For now, we'll just use the old logic as a placeholder
+          dummyList = List.generate(numberOfDummies, (index) => 'Dummy#\${index + 1}');
+        });
+      } else {
+        setState(() {
+          log.add('>: API request failed with status: \${response.statusCode}');
+          log.add('>: Error: \${response.body}');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        log.add('>: An error occurred while sending the request:');
+        log.add(e.toString());
+      });
+    }
   }
 
   @override
@@ -59,10 +103,13 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
               padding: const EdgeInsets.all(12),
               children: [
                 PartSelection(
-                  selectedTargetCode: selectedTargetCode,
+                  selectedTargetCodes: selectedTargetCodes,
                   selectedDummyCodes: selectedDummyCodes,
-                  onTargetCodeChanged: (val) =>
-                      setState(() => selectedTargetCode = val),
+                  onTargetCodeChanged: (code, val) => setState(() {
+                    val
+                        ? selectedTargetCodes.add(code)
+                        : selectedTargetCodes.remove(code);
+                  }),
                   onDummyCodeChanged: (code, val) => setState(() {
                     val
                         ? selectedDummyCodes.add(code)

@@ -2,14 +2,14 @@
 import 'package:flutter/material.dart';
 
 class PartSelection extends StatelessWidget {
-  final String selectedTargetCode;
+  final Set<String> selectedTargetCodes;
   final Set<String> selectedDummyCodes;
-  final Function(String) onTargetCodeChanged;
+  final Function(String, bool) onTargetCodeChanged;
   final Function(String, bool) onDummyCodeChanged;
 
   const PartSelection({
     super.key,
-    required this.selectedTargetCode,
+    required this.selectedTargetCodes,
     required this.selectedDummyCodes,
     required this.onTargetCodeChanged,
     required this.onDummyCodeChanged,
@@ -60,8 +60,9 @@ class PartSelection extends StatelessWidget {
                           return Row(
                             children: [
                               Checkbox(
-                                value: selectedTargetCode == code,
-                                onChanged: (_) => onTargetCodeChanged(code),
+                                value: selectedTargetCodes.contains(code),
+                                onChanged: (val) =>
+                                    onTargetCodeChanged(code, val ?? false),
                               ),
                               Text(code),
                             ],
