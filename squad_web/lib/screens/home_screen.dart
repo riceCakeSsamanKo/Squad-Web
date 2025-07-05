@@ -24,10 +24,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
   int numberOfDummies = 5;
   List<String> dummyList = [];
   final log = <String>[
-    '>: Selected SE for Target Code',
-    '>: Selected PQC, MEA for Dummy Code',
-    '>: Building Target Code ... Success!',
-    '>: Building Dummy Codes ... Success!'
+    '>: Ready.'
   ];
 
   final nQubitsController = TextEditingController(text: '6');
@@ -41,7 +38,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
 
   Future<void> generateDummies() async {
     setState(() {
-      log.add('>: Starting API request...');
+      log.add('>: [Generate] Starting API request...');
     });
 
     final queryParams = {
@@ -59,8 +56,28 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
       'num_dummies': numberOfDummies.toString(),
     };
 
+    await _sendApiRequest('/run-multi-test', queryParams);
+  }
+
+  Future<void> runTestWithSavedWeights() async {
+    setState(() {
+      log.add('>: [Run] Starting API request...');
+    });
+
+    final queryParams = {
+      'parts_to_test': selectedTargetCodes.join(','),
+      'n_qubits': nQubitsController.text,
+      'sample_count': '6',
+      'weights_dir': './trained_weights',
+      'code_dir': 'generated_code',
+    };
+
+    await _sendApiRequest('/test-saved-weights', queryParams);
+  }
+
+  Future<void> _sendApiRequest(String path, Map<String, String> queryParams) async {
     try {
-      final uri = Uri.http('127.0.0.1:8000', '/run-multi-test', queryParams);
+      final uri = Uri.http('127.0.0.1:8000', path, queryParams);
       
       setState(() {
         log.add('>: Sending GET request to: $uri');
@@ -73,14 +90,16 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
         setState(() {
           log.add('>: API request successful!');
           log.add('>: Response: ${response.body}');
-          // Assuming the response gives us a list of dummies to populate
-          // For now, we'll just use the old logic as a placeholder
-          dummyList = List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
+          // This is a placeholder, you might want to parse the response
+          // and update the UI accordingly (e.g., dummyList, results)
+          if (path == '/run-multi-test') {
+             dummyList = List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
+          }
         });
       } else {
         setState(() {
-          log.add('>: API request failed with status: \${response.statusCode}');
-          log.add('>: Error: \${response.body}');
+          log.add('>: API request failed with status: ${response.statusCode}');
+          log.add('>: Error: ${response.body}');
         });
       }
     } catch (e) {
@@ -151,6 +170,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 DummyGeneration(
                   dummyList: dummyList,
                   selectedDummyCodes: selectedDummyCodes,
+                  onRunPressed: runTestWithSavedWeights, // Pass the function here
                 ),
               ],
             ),

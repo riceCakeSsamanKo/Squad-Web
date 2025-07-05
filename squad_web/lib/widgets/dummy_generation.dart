@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class DummyGeneration extends StatelessWidget {
   final List<String> dummyList;
   final Set<String> selectedDummyCodes;
+  final VoidCallback onRunPressed; // Callback for the run button
 
   const DummyGeneration({
     super.key,
     required this.dummyList,
     required this.selectedDummyCodes,
+    required this.onRunPressed,
   });
 
   @override
@@ -26,12 +28,12 @@ class DummyGeneration extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Dummy Code Generation',
+              const Text('Dummy Code Generation',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ElevatedButton(onPressed: null, child: Text('Run')),
+              ElevatedButton(onPressed: onRunPressed, child: const Text('Run')), // Connect the callback
             ],
           ),
           const SizedBox(height: 12),
