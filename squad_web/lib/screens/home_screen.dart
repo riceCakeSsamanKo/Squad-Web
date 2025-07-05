@@ -75,7 +75,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
           log.add('>: Response: ${response.body}');
           // Assuming the response gives us a list of dummies to populate
           // For now, we'll just use the old logic as a placeholder
-          dummyList = List.generate(numberOfDummies, (index) => 'Dummy#\${index + 1}');
+          dummyList = List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
         });
       } else {
         setState(() {
