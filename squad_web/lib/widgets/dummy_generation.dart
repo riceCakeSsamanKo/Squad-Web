@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class DummyGeneration extends StatelessWidget {
   final List<String> dummyList;
   final Set<String> selectedDummyCodes;
-  final VoidCallback onRunPressed; // Callback for the run button
+  final VoidCallback onRunPressed;
 
   const DummyGeneration({
     super.key,
@@ -14,95 +14,132 @@ class DummyGeneration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final orderedCodes = ['SE', 'PQC', 'MEA']
         .where((code) => selectedDummyCodes.contains(code))
         .toList();
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade600),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Dummy Code Generation',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              ElevatedButton(onPressed: onRunPressed, child: const Text('Run')), // Connect the callback
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Dummy List
-              Container(
-                width: 120,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ListView(
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Dummy Code Generation', style: textTheme.titleLarge),
+                ElevatedButton(
+                    onPressed: onRunPressed, child: const Text('Run')),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dummy List
+                Container(
+                  width: 150,
+                  height: 180,
                   padding: const EdgeInsets.all(8),
-                  children: dummyList.map((dummy) {
-                    return Row(
-                      children: [
-                        Checkbox(value: false, onChanged: (_) {}),
-                        Expanded(child: Text(dummy)),
-                      ],
-                    );
-                  }).toList(),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+                        child: Text("Dummy List", style: textTheme.titleSmall),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          children: dummyList.map((dummy) {
+                            return Row(
+                              children: [
+                                Checkbox(value: true, onChanged: (_) {}),
+                                Expanded(child: Text(dummy)),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Visualization + Details
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: orderedCodes
-                      .map((code) => Expanded(
-                            child: Container(
-                              height: 150,
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: code == 'PQC' || code == 'SE'
-                                    ? Colors.green.shade100.withOpacity(0.3)
-                                    : Colors.red.shade100.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(code,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  if (code == 'PQC' || code == 'SE') ...[
-                                    const Text('• layer : RXYZCXLAYER'),
-                                    const Text('• n_blocks : 4'),
-                                    const Text('• n_qubits : 6'),
-                                  ] else if (code == 'MEA') ...[
-                                    const Text('• layer : MeasureAll'),
-                                    const Text('• operator : Pauli-Z'),
-                                    const Text('• n_qubits : 6'),
-                                  ]
-                                ],
-                              ),
+                const SizedBox(width: 12),
+                // Visualization + Details
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: orderedCodes.map((code) {
+                      final isGood = code == 'PQC' || code == 'SE';
+                      return Expanded(
+                        child: Container(
+                          height: 180,
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isGood
+                                  ? Colors.green.shade200
+                                  : Colors.grey.shade400, // Changed from red
                             ),
-                          ))
-                      .toList(),
-                ),
-              )
-            ],
-          )
-        ],
+                            color: isGood
+                                ? Colors.green.shade50.withOpacity(0.5)
+                                : Colors.grey.shade200
+                                    .withOpacity(0.5), // Changed from red
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                code,
+                                style: textTheme.titleMedium?.copyWith(
+                                  color: isGood
+                                      ? Colors.green.shade900
+                                      : Colors
+                                          .grey.shade800, // Changed from red
+                                ),
+                              ),
+                              const Divider(),
+                              ..._buildCodeDetails(context, code),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                )
+              ],
+            )
+          ],
+        ),
       ),
     );
+  }
+
+  List<Widget> _buildCodeDetails(BuildContext context, String code) {
+    final textStyle = Theme.of(context).textTheme.bodySmall;
+    switch (code) {
+      case 'PQC':
+      case 'SE':
+        return [
+          Text('• layer : RXYZCXLAYER', style: textStyle),
+          Text('• n_blocks : 4', style: textStyle),
+          Text('• n_qubits : 6', style: textStyle),
+        ];
+      case 'MEA':
+        return [
+          Text('• layer : MeasureAll', style: textStyle),
+          Text('• operator : Pauli-Z', style: textStyle),
+          Text('• n_qubits : 6', style: textStyle),
+        ];
+      default:
+        return [];
+    }
   }
 }

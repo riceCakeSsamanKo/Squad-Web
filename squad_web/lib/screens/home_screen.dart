@@ -1,5 +1,6 @@
 // home_screen.dart
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,9 +24,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
   String selectedLayer = 'StateEncoder';
   int numberOfDummies = 5;
   List<String> dummyList = [];
-  final log = <String>[
-    '>: Ready.'
-  ];
+  final log = <String>['>: Ready.'];
 
   final nQubitsController = TextEditingController(text: '6');
   final batchSizeController = TextEditingController(text: '1');
@@ -75,10 +74,11 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     await _sendApiRequest('/test-saved-weights', queryParams);
   }
 
-  Future<void> _sendApiRequest(String path, Map<String, String> queryParams) async {
+  Future<void> _sendApiRequest(
+      String path, Map<String, String> queryParams) async {
     try {
       final uri = Uri.http('127.0.0.1:8000', path, queryParams);
-      
+
       setState(() {
         log.add('>: Sending GET request to: $uri');
       });
@@ -93,7 +93,8 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
           // This is a placeholder, you might want to parse the response
           // and update the UI accordingly (e.g., dummyList, results)
           if (path == '/run-multi-test') {
-             dummyList = List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
+            dummyList =
+                List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
           }
         });
       } else {
@@ -170,7 +171,8 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 DummyGeneration(
                   dummyList: dummyList,
                   selectedDummyCodes: selectedDummyCodes,
-                  onRunPressed: runTestWithSavedWeights, // Pass the function here
+                  onRunPressed:
+                      runTestWithSavedWeights, // Pass the function here
                 ),
               ],
             ),
@@ -180,12 +182,13 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  LogPanel(log: log),
+                  Expanded(child: LogPanel(log: log)),
                   const SizedBox(height: 20),
                   _divider(),
-                  ResultsPanel(dummyList: dummyList),
+                  Expanded(child: ResultsPanel(dummyList: dummyList)),
                 ],
               ),
             ),
