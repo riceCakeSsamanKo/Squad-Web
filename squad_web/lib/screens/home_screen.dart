@@ -25,6 +25,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
   int numberOfDummies = 5;
   List<String> dummyList = [];
   final log = <String>['>: Ready.'];
+  String selectedDummyCode = 'PQC'; // DummyGeneration용 단일 선택 상태
 
   final nQubitsController = TextEditingController(text: '6');
   final batchSizeController = TextEditingController(text: '1');
@@ -170,9 +171,15 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 _divider(),
                 DummyGeneration(
                   dummyList: dummyList,
+                  selectedDummyCode: selectedDummyCode.isNotEmpty &&
+                          dummyList.contains(selectedDummyCode)
+                      ? selectedDummyCode
+                      : (dummyList.isNotEmpty ? dummyList.first : ''),
                   selectedDummyCodes: selectedDummyCodes,
-                  onRunPressed:
-                      runTestWithSavedWeights, // Pass the function here
+                  onDummyCodeChanged: (code) => setState(() {
+                    selectedDummyCode = code;
+                  }),
+                  onRunPressed: runTestWithSavedWeights,
                 ),
               ],
             ),

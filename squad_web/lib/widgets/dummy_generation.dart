@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 class DummyGeneration extends StatelessWidget {
   final List<String> dummyList;
-  final Set<String> selectedDummyCodes;
+  final String selectedDummyCode;
+  final Set<String> selectedDummyCodes; // 추가: PartSelection에서 선택된 Dummy Code들
   final VoidCallback onRunPressed;
+  final Function(String) onDummyCodeChanged;
 
   const DummyGeneration({
     super.key,
     required this.dummyList,
+    required this.selectedDummyCode,
     required this.selectedDummyCodes,
     required this.onRunPressed,
+    required this.onDummyCodeChanged,
   });
 
   @override
@@ -59,7 +63,13 @@ class DummyGeneration extends StatelessWidget {
                           children: dummyList.map((dummy) {
                             return Row(
                               children: [
-                                Checkbox(value: true, onChanged: (_) {}),
+                                Radio<String>(
+                                  value: dummy,
+                                  groupValue: selectedDummyCode,
+                                  onChanged: (val) {
+                                    if (val != null) onDummyCodeChanged(val);
+                                  },
+                                ),
                                 Expanded(child: Text(dummy)),
                               ],
                             );
