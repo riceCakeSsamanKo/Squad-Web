@@ -57,14 +57,20 @@ class PartSelection extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: ['SE', 'PQC', 'MEA'].map((code) {
+                          final isDisabled = selectedDummyCodes.contains(code);
                           return Row(
                             children: [
                               Checkbox(
                                 value: selectedTargetCodes.contains(code),
-                                onChanged: (val) =>
-                                    onTargetCodeChanged(code, val ?? false),
+                                onChanged: isDisabled
+                                    ? null
+                                    : (val) =>
+                                        onTargetCodeChanged(code, val ?? false),
                               ),
-                              Text(code),
+                              Text(code,
+                                  style: isDisabled
+                                      ? const TextStyle(color: Colors.grey)
+                                      : null),
                             ],
                           );
                         }).toList(),
@@ -93,14 +99,20 @@ class PartSelection extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: ['SE', 'PQC', 'MEA'].map((code) {
+                          final isDisabled = selectedTargetCodes.contains(code);
                           return Row(
                             children: [
                               Checkbox(
                                 value: selectedDummyCodes.contains(code),
-                                onChanged: (val) =>
-                                    onDummyCodeChanged(code, val ?? false),
+                                onChanged: isDisabled
+                                    ? null
+                                    : (val) =>
+                                        onDummyCodeChanged(code, val ?? false),
                               ),
-                              Text(code),
+                              Text(code,
+                                  style: isDisabled
+                                      ? const TextStyle(color: Colors.grey)
+                                      : null),
                             ],
                           );
                         }).toList(),
