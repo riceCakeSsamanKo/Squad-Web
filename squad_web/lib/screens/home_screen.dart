@@ -85,7 +85,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
       'epochs': epochsController.text,
       'optimizer': optimizerController.text,
       'lr': lrController.text,
-      'varient_count': numberOfDummies.toString(),
+      'variant_count': numberOfDummies.toString(),
     };
 
     await _sendApiRequest('/run-multi-test', queryParams);
@@ -97,7 +97,9 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     });
 
     final queryParams = {
-      'parts_to_test': selectedTargetCodes.join(','),
+      'parts_to_test': selectedTargetCodes
+          .map((code) => code == 'SE' ? 'encoder' : code)
+          .join(','),
       'n_qubits': nQubitsController.text,
       'sample_count': '6',
       'weights_dir': './trained_weights',
@@ -135,6 +137,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 });
                 return {
                   'dummy_id': e['dummy_id'].toString(),
+                  'accuracy': e['accuracy'] ?? 0.0,
                   'info': info,
                 };
               }).toList();
@@ -245,11 +248,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                   Expanded(child: LogPanel(log: log)),
                   const SizedBox(height: 20),
                   _divider(),
-                  Expanded(
-                      child: ResultsPanel(
-                          dummyList: dummyData
-                              .map((e) => e['dummy_id'] as String)
-                              .toList())),
+                  Expanded(child: ResultsPanel(dummyData: dummyData)),
                 ],
               ),
             ),

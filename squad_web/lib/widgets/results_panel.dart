@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 
 class ResultsPanel extends StatelessWidget {
-  final List<String> dummyList;
+  final List<Map<String, dynamic>> dummyData;
 
   const ResultsPanel({
     super.key,
-    required this.dummyList,
+    required this.dummyData,
   });
 
   @override
@@ -31,13 +31,15 @@ class ResultsPanel extends StatelessWidget {
                     DataColumn(label: Text('Dummy Code')),
                     DataColumn(label: Text('Accuracy')),
                   ],
-                  rows: dummyList.map((d) {
-                    final acc =
-                        (0.5 + dummyList.indexOf(d) * 0.015).toStringAsFixed(3);
+                  rows: dummyData.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final dummy = entry.value;
+                    final dummyId = dummy['dummy_id'] as String;
+                    final accuracy = dummy['accuracy'] as double? ?? 0.0;
                     return DataRow(
                       cells: [
-                        DataCell(Text(d)),
-                        DataCell(Text(acc)),
+                        DataCell(Text('Dummy#${idx + 1}')),
+                        DataCell(Text(accuracy.toStringAsFixed(3))),
                       ],
                     );
                   }).toList(),

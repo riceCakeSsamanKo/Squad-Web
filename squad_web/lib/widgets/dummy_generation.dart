@@ -25,7 +25,7 @@ class DummyGeneration extends StatelessWidget {
     // 선택된 더미의 info에서 존재하는 파트만 추출
     final selectedDummy = dummyData.firstWhere(
         (e) => e['dummy_id'] == selectedDummyCode,
-        orElse: () => {'info': {}});
+        orElse: () => <String, dynamic>{'info': <String, dynamic>{}});
     final info = selectedDummy['info'] as Map<String, dynamic>? ?? {};
     final infoKeys = info.keys.map((k) => k.toString().toUpperCase()).toSet();
     final orderedCodes = ['SE', 'PQC', 'MEA']
@@ -147,7 +147,7 @@ class DummyGeneration extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.bodySmall;
     final selectedDummy = dummyData.firstWhere(
         (e) => e['dummy_id'] == selectedDummyCode,
-        orElse: () => {'info': {}});
+        orElse: () => <String, dynamic>{'info': <String, dynamic>{}});
     final info = selectedDummy['info'] as Map<String, dynamic>? ?? {};
     final partInfo = info[code.toLowerCase()];
     if (partInfo is Map<String, dynamic>) {
