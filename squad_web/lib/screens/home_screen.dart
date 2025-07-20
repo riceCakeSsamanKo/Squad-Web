@@ -124,7 +124,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
         final responseData = jsonDecode(response.body);
         setState(() {
           log.add('>: API request successful!');
-          log.add('>: Response: ${response.body}');
+          // log.add('>: Response: ${response.body}');
           if (path == '/run-multi-test') {
             // results 배열에서 dummy_id별 info 파싱
             final results = responseData['results'] as List<dynamic>?;
