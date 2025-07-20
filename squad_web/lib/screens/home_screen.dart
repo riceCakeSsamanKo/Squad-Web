@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../widgets/code_layer.dart';
 import '../widgets/dummy_generation.dart';
@@ -23,9 +24,10 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
   Set<String> selectedDummyCodes = {'PQC', 'MEA'};
   String selectedLayer = 'StateEncoder';
   int numberOfDummies = 5;
-  List<String> dummyList = [];
+  List<Map<String, dynamic>> dummyData = [];
   final log = <String>['>: Ready.'];
   String selectedDummyCode = 'PQC'; // DummyGeneration용 단일 선택 상태
+  WebSocketChannel? _logChannel;
 
   final nQubitsController = TextEditingController(text: '6');
   final batchSizeController = TextEditingController(text: '1');
@@ -36,7 +38,33 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
 
   Widget _divider() => Divider(color: Colors.grey[700], thickness: 1.0);
 
+  @override
+  void dispose() {
+    _logChannel?.sink.close();
+    super.dispose();
+  }
+
+  void connectLogWebSocket() {
+    _logChannel?.sink.close(); // 기존 연결 종료
+    _logChannel =
+        WebSocketChannel.connect(Uri.parse('ws://localhost:8000/ws/logs'));
+    _logChannel!.stream.listen((message) {
+      setState(() {
+        log.add('WS: $message');
+      });
+    }, onDone: () {
+      setState(() {
+        log.add('>: WebSocket closed');
+      });
+    }, onError: (error) {
+      setState(() {
+        log.add('>: WebSocket error: $error');
+      });
+    });
+  }
+
   Future<void> generateDummies() async {
+    connectLogWebSocket();
     setState(() {
       log.add('>: [Generate] Starting API request...');
     });
@@ -91,11 +119,24 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
         setState(() {
           log.add('>: API request successful!');
           log.add('>: Response: ${response.body}');
-          // This is a placeholder, you might want to parse the response
-          // and update the UI accordingly (e.g., dummyList, results)
           if (path == '/run-multi-test') {
-            dummyList =
-                List.generate(numberOfDummies, (index) => 'Dummy#${index + 1}');
+            // results 배열에서 dummy_id별 info 파싱
+            final results = responseData['results'] as List<dynamic>?;
+            if (results != null) {
+              dummyData = results.map<Map<String, dynamic>>((e) {
+                final rawInfo = e['info'] ?? {};
+                final info = <String, dynamic>{};
+                rawInfo.forEach((k, v) {
+                  info[k] = v is Map ? Map<String, dynamic>.from(v) : v;
+                });
+                return {
+                  'dummy_id': e['dummy_id'].toString(),
+                  'info': info,
+                };
+              }).toList();
+            } else {
+              dummyData = [];
+            }
           }
         });
       } else {
@@ -170,11 +211,16 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 const SizedBox(height: 20),
                 _divider(),
                 DummyGeneration(
-                  dummyList: dummyList,
+                  dummyList:
+                      dummyData.map((e) => e['dummy_id'] as String).toList(),
+                  dummyData: dummyData,
                   selectedDummyCode: selectedDummyCode.isNotEmpty &&
-                          dummyList.contains(selectedDummyCode)
+                          dummyData
+                              .any((e) => e['dummy_id'] == selectedDummyCode)
                       ? selectedDummyCode
-                      : (dummyList.isNotEmpty ? dummyList.first : ''),
+                      : (dummyData.isNotEmpty
+                          ? dummyData.first['dummy_id'] as String
+                          : ''),
                   selectedDummyCodes: selectedDummyCodes,
                   onDummyCodeChanged: (code) => setState(() {
                     selectedDummyCode = code;
@@ -195,7 +241,11 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                   Expanded(child: LogPanel(log: log)),
                   const SizedBox(height: 20),
                   _divider(),
-                  Expanded(child: ResultsPanel(dummyList: dummyList)),
+                  Expanded(
+                      child: ResultsPanel(
+                          dummyList: dummyData
+                              .map((e) => e['dummy_id'] as String)
+                              .toList())),
                 ],
               ),
             ),

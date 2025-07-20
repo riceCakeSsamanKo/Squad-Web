@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class DummyGeneration extends StatelessWidget {
   final List<String> dummyList;
+  final List<Map<String, dynamic>> dummyData;
   final String selectedDummyCode;
   final Set<String> selectedDummyCodes; // 추가: PartSelection에서 선택된 Dummy Code들
   final VoidCallback onRunPressed;
@@ -10,6 +11,7 @@ class DummyGeneration extends StatelessWidget {
   const DummyGeneration({
     super.key,
     required this.dummyList,
+    required this.dummyData,
     required this.selectedDummyCode,
     required this.selectedDummyCodes,
     required this.onRunPressed,
@@ -20,8 +22,15 @@ class DummyGeneration extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    // 선택된 더미의 info에서 존재하는 파트만 추출
+    final selectedDummy = dummyData.firstWhere(
+        (e) => e['dummy_id'] == selectedDummyCode,
+        orElse: () => {'info': {}});
+    final info = selectedDummy['info'] as Map<String, dynamic>? ?? {};
+    final infoKeys = info.keys.map((k) => k.toString().toUpperCase()).toSet();
     final orderedCodes = ['SE', 'PQC', 'MEA']
-        .where((code) => selectedDummyCodes.contains(code))
+        .where((code) =>
+            infoKeys.contains(code) && selectedDummyCodes.contains(code))
         .toList();
 
     return Card(
@@ -59,8 +68,10 @@ class DummyGeneration extends StatelessWidget {
                         child: Text("Dummy List", style: textTheme.titleSmall),
                       ),
                       Expanded(
-                        child: ListView(
-                          children: dummyList.map((dummy) {
+                        child: ListView.builder(
+                          itemCount: dummyList.length,
+                          itemBuilder: (context, idx) {
+                            final dummy = dummyList[idx];
                             return Row(
                               children: [
                                 Radio<String>(
@@ -70,10 +81,10 @@ class DummyGeneration extends StatelessWidget {
                                     if (val != null) onDummyCodeChanged(val);
                                   },
                                 ),
-                                Expanded(child: Text(dummy)),
+                                Expanded(child: Text('Dummy#${idx + 1}')),
                               ],
                             );
-                          }).toList(),
+                          },
                         ),
                       ),
                     ],
@@ -134,22 +145,16 @@ class DummyGeneration extends StatelessWidget {
 
   List<Widget> _buildCodeDetails(BuildContext context, String code) {
     final textStyle = Theme.of(context).textTheme.bodySmall;
-    switch (code) {
-      case 'PQC':
-      case 'SE':
-        return [
-          Text('• layer : RXYZCXLAYER', style: textStyle),
-          Text('• n_blocks : 4', style: textStyle),
-          Text('• n_qubits : 6', style: textStyle),
-        ];
-      case 'MEA':
-        return [
-          Text('• layer : MeasureAll', style: textStyle),
-          Text('• operator : Pauli-Z', style: textStyle),
-          Text('• n_qubits : 6', style: textStyle),
-        ];
-      default:
-        return [];
+    final selectedDummy = dummyData.firstWhere(
+        (e) => e['dummy_id'] == selectedDummyCode,
+        orElse: () => {'info': {}});
+    final info = selectedDummy['info'] as Map<String, dynamic>? ?? {};
+    final partInfo = info[code.toLowerCase()];
+    if (partInfo is Map<String, dynamic>) {
+      return partInfo.entries.map<Widget>((entry) {
+        return Text('• ${entry.key} : ${entry.value}', style: textStyle);
+      }).toList();
     }
+    return [];
   }
 }

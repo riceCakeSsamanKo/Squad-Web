@@ -24,7 +24,7 @@ class ResultsPanel extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 child: DataTable(
-                  headingRowColor: MaterialStateProperty.all(
+                  headingRowColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   ),
                   columns: const [
