@@ -70,18 +70,22 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     });
 
     final queryParams = {
-      'target_parts': selectedTargetCodes.join(','),
+      'target_parts': selectedTargetCodes
+          .map((code) => code == 'SE' ? 'encoder' : code)
+          .join(','),
       'n_qubits': nQubitsController.text,
       'variant_counts': '3',
       'sample_count': '10',
-      'dummy_codes': selectedDummyCodes.join(','),
+      'dummy_codes': selectedDummyCodes
+          .map((code) => code == 'SE' ? 'encoder' : code)
+          .join(','),
       'layer': selectedLayer,
       'batch_size': batchSizeController.text,
       'device': deviceController.text,
       'epochs': epochsController.text,
       'optimizer': optimizerController.text,
       'lr': lrController.text,
-      'num_dummies': numberOfDummies.toString(),
+      'varient_count': numberOfDummies.toString(),
     };
 
     await _sendApiRequest('/run-multi-test', queryParams);
