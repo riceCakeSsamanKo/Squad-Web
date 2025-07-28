@@ -74,21 +74,10 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
           .map((code) => code == 'SE' ? 'encoder' : code)
           .join(','),
       'n_qubits': nQubitsController.text,
-      'variant_counts': '3',
-      'sample_count': '10',
-      'dummy_codes': selectedDummyCodes
-          .map((code) => code == 'SE' ? 'encoder' : code)
-          .join(','),
-      'layer': selectedLayer,
-      'batch_size': batchSizeController.text,
-      'device': deviceController.text,
-      'epochs': epochsController.text,
-      'optimizer': optimizerController.text,
-      'lr': lrController.text,
       'variant_count': numberOfDummies.toString(),
     };
 
-    await _sendApiRequest('/run-multi-test', queryParams);
+    await _sendApiRequest('/generate-code', queryParams);
   }
 
   Future<void> runTestWithSavedWeights() async {
@@ -97,16 +86,25 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     });
 
     final queryParams = {
-      'parts_to_test': selectedTargetCodes
+      'target_parts': selectedTargetCodes
           .map((code) => code == 'SE' ? 'encoder' : code)
           .join(','),
       'n_qubits': nQubitsController.text,
-      'sample_count': '6',
-      'weights_dir': './trained_weights',
-      'code_dir': 'generated_code',
+      'variant_counts': '3',
+      'sample_count': '10',
+      'dummy_codes': selectedDummyCodes
+          .map((code) => code == 'SE' ? 'encoder' : code)
+          .join(','),
+      'layer': selectedLayer,
+      'batch_size': batchSizeController.text,
+      'device': deviceController.text,
+      'train_epochs': epochsController.text,
+      'optimizer': optimizerController.text,
+      'lr': lrController.text,
+      'variant_count': numberOfDummies.toString(),
     };
 
-    await _sendApiRequest('/test-saved-weights', queryParams);
+    await _sendApiRequest('/run-multi-test', queryParams);
   }
 
   Future<void> _sendApiRequest(
@@ -138,6 +136,35 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                 return {
                   'dummy_id': e['dummy_id'].toString(),
                   'accuracy': e['accuracy'] ?? 0.0,
+                  'info': info,
+                };
+              }).toList();
+            } else {
+              dummyData = [];
+            }
+          } else if (path == '/generate-code') {
+            // generate-code API의 새로운 응답 구조 처리
+            final results = responseData['results'] as List<dynamic>?;
+            if (results != null) {
+              dummyData = results.map<Map<String, dynamic>>((e) {
+                final dummyParts =
+                    e['dummy_parts'] as Map<String, dynamic>? ?? {};
+                final info = <String, dynamic>{};
+
+                // dummy_parts의 각 파트 정보를 info로 변환
+                dummyParts.forEach((partKey, partValue) {
+                  if (partValue is Map<String, dynamic>) {
+                    final partInfo =
+                        partValue['info'] as Map<String, dynamic>? ?? {};
+                    // encoder를 SE로 변환하여 저장
+                    final key = partKey == 'encoder' ? 'se' : partKey;
+                    info[key] = partInfo;
+                  }
+                });
+
+                return {
+                  'dummy_id': e['dummy_id'].toString(),
+                  'accuracy': 0.0, // generate-code는 accuracy 정보가 없으므로 기본값
                   'info': info,
                 };
               }).toList();
