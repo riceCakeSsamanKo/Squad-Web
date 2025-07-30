@@ -57,20 +57,14 @@ class PartSelection extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: ['SE', 'PQC', 'MEA'].map((code) {
-                          final isDisabled = selectedDummyCodes.contains(code);
                           return Row(
                             children: [
                               Checkbox(
                                 value: selectedTargetCodes.contains(code),
-                                onChanged: isDisabled
-                                    ? null
-                                    : (val) =>
-                                        onTargetCodeChanged(code, val ?? false),
+                                onChanged: (val) =>
+                                    onTargetCodeChanged(code, val ?? false),
                               ),
-                              Text(code,
-                                  style: isDisabled
-                                      ? const TextStyle(color: Colors.grey)
-                                      : null),
+                              Text(code),
                             ],
                           );
                         }).toList(),
@@ -81,7 +75,7 @@ class PartSelection extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // Dummy Code
+              // Dummy Code (자동 선택 - 읽기 전용)
               Expanded(
                 child: Container(
                   padding:
@@ -93,26 +87,25 @@ class PartSelection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Dummy Code:',
+                      const Text('Dummy Code (Auto):',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: ['SE', 'PQC', 'MEA'].map((code) {
-                          final isDisabled = selectedTargetCodes.contains(code);
+                          final isSelected = selectedDummyCodes.contains(code);
                           return Row(
                             children: [
                               Checkbox(
-                                value: selectedDummyCodes.contains(code),
-                                onChanged: isDisabled
-                                    ? null
-                                    : (val) =>
-                                        onDummyCodeChanged(code, val ?? false),
+                                value: isSelected,
+                                onChanged: null, // 비활성화
                               ),
                               Text(code,
-                                  style: isDisabled
-                                      ? const TextStyle(color: Colors.grey)
-                                      : null),
+                                  style: isSelected
+                                      ? const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold)
+                                      : const TextStyle(color: Colors.grey)),
                             ],
                           );
                         }).toList(),

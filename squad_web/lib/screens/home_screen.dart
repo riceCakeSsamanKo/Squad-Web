@@ -69,15 +69,17 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
       log.add('>: [Generate] Starting API request...');
     });
 
-    final queryParams = {
-      'target_parts': selectedTargetCodes
-          .map((code) => code == 'SE' ? 'encoder' : code)
-          .join(','),
-      'n_qubits': nQubitsController.text,
-      'variant_count': numberOfDummies.toString(),
-    };
+    // 기본 파라미터들
+    String url =
+        'http://127.0.0.1:8000/generate-code?n_qubits=${nQubitsController.text}&variant_count=${numberOfDummies.toString()}';
 
-    await _sendApiRequest('/generate-code', queryParams);
+    // 각 선택된 Target Code를 개별 파라미터로 추가
+    for (final code in selectedTargetCodes) {
+      final partName = code == 'SE' ? 'encoder' : code.toLowerCase();
+      url += '&target_parts=$partName';
+    }
+
+    await _sendApiRequest('/generate-code', url);
   }
 
   Future<void> runTestWithSavedWeights() async {
@@ -107,10 +109,24 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     await _sendApiRequest('/run-multi-test', queryParams);
   }
 
-  Future<void> _sendApiRequest(
-      String path, Map<String, String> queryParams) async {
+  Future<void> _sendApiRequest(String path, dynamic queryParams) async {
     try {
-      final uri = Uri.http('127.0.0.1:8000', path, queryParams);
+      Uri uri;
+      if (queryParams is String) {
+        // URL 문자열인 경우
+        uri = Uri.parse(queryParams);
+      } else {
+        // Map인 경우 (기존 방식)
+        final queryParametersAll = <String, List<String>>{};
+        queryParams.forEach((key, value) {
+          if (queryParametersAll.containsKey(key)) {
+            queryParametersAll[key]!.add(value);
+          } else {
+            queryParametersAll[key] = [value];
+          }
+        });
+        uri = Uri.http('127.0.0.1:8000', path, queryParametersAll);
+      }
 
       setState(() {
         log.add('>: Sending GET request to: $uri');
@@ -204,15 +220,23 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                     selectedTargetCodes: selectedTargetCodes,
                     selectedDummyCodes: selectedDummyCodes,
                     onTargetCodeChanged: (code, val) => setState(() {
-                      val
-                          ? selectedTargetCodes.add(code)
-                          : selectedTargetCodes.remove(code);
+                      if (val) {
+                        selectedTargetCodes.add(code);
+                      } else {
+                        selectedTargetCodes.remove(code);
+                      }
+                      // Target Code 선택에 따라 Dummy Code 자동 업데이트
+                      selectedDummyCodes.clear();
+                      final allCodes = {'SE', 'PQC', 'MEA'};
+                      for (final code in allCodes) {
+                        if (!selectedTargetCodes.contains(code)) {
+                          selectedDummyCodes.add(code);
+                        }
+                      }
                     }),
-                    onDummyCodeChanged: (code, val) => setState(() {
-                      val
-                          ? selectedDummyCodes.add(code)
-                          : selectedDummyCodes.remove(code);
-                    }),
+                    onDummyCodeChanged: (code, val) {
+                      // Dummy Code는 수동 선택 불가능
+                    },
                   ),
                   const SizedBox(height: 20),
                   _divider(),
