@@ -195,73 +195,81 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
         children: [
           Expanded(
             flex: 3,
-            child: ListView(
+            child: Padding(
               padding: const EdgeInsets.all(12),
-              children: [
-                PartSelection(
-                  selectedTargetCodes: selectedTargetCodes,
-                  selectedDummyCodes: selectedDummyCodes,
-                  onTargetCodeChanged: (code, val) => setState(() {
-                    val
-                        ? selectedTargetCodes.add(code)
-                        : selectedTargetCodes.remove(code);
-                  }),
-                  onDummyCodeChanged: (code, val) => setState(() {
-                    val
-                        ? selectedDummyCodes.add(code)
-                        : selectedDummyCodes.remove(code);
-                  }),
-                ),
-                const SizedBox(height: 20),
-                _divider(),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: CodeLayer(
-                        selectedLayer: selectedLayer,
-                        onChanged: (val) => setState(() => selectedLayer = val),
+              child: Column(
+                children: [
+                  // 상단 고정 영역
+                  PartSelection(
+                    selectedTargetCodes: selectedTargetCodes,
+                    selectedDummyCodes: selectedDummyCodes,
+                    onTargetCodeChanged: (code, val) => setState(() {
+                      val
+                          ? selectedTargetCodes.add(code)
+                          : selectedTargetCodes.remove(code);
+                    }),
+                    onDummyCodeChanged: (code, val) => setState(() {
+                      val
+                          ? selectedDummyCodes.add(code)
+                          : selectedDummyCodes.remove(code);
+                    }),
+                  ),
+                  const SizedBox(height: 20),
+                  _divider(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: CodeLayer(
+                          selectedLayer: selectedLayer,
+                          onChanged: (val) =>
+                              setState(() => selectedLayer = val),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: HyperparameterConfig(
-                        nQubitsController: nQubitsController,
-                        batchSizeController: batchSizeController,
-                        deviceController: deviceController,
-                        epochsController: epochsController,
-                        optimizerController: optimizerController,
-                        lrController: lrController,
-                        numberOfDummies: numberOfDummies,
-                        onNumberChanged: (val) =>
-                            setState(() => numberOfDummies = val),
-                        onGeneratePressed: generateDummies,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: HyperparameterConfig(
+                          nQubitsController: nQubitsController,
+                          batchSizeController: batchSizeController,
+                          deviceController: deviceController,
+                          epochsController: epochsController,
+                          optimizerController: optimizerController,
+                          lrController: lrController,
+                          numberOfDummies: numberOfDummies,
+                          onNumberChanged: (val) =>
+                              setState(() => numberOfDummies = val),
+                          onGeneratePressed: generateDummies,
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _divider(),
+                  // DummyGeneration을 Expanded로 감싸서 남은 공간을 모두 차지하도록 함
+                  Expanded(
+                    child: DummyGeneration(
+                      dummyList: dummyData
+                          .map((e) => e['dummy_id'] as String)
+                          .toList(),
+                      dummyData: dummyData,
+                      selectedDummyCode: selectedDummyCode.isNotEmpty &&
+                              dummyData.any(
+                                  (e) => e['dummy_id'] == selectedDummyCode)
+                          ? selectedDummyCode
+                          : (dummyData.isNotEmpty
+                              ? dummyData.first['dummy_id'] as String
+                              : ''),
+                      selectedDummyCodes: selectedDummyCodes,
+                      onDummyCodeChanged: (code) => setState(() {
+                        selectedDummyCode = code;
+                      }),
+                      onRunPressed: runTestWithSavedWeights,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _divider(),
-                DummyGeneration(
-                  dummyList:
-                      dummyData.map((e) => e['dummy_id'] as String).toList(),
-                  dummyData: dummyData,
-                  selectedDummyCode: selectedDummyCode.isNotEmpty &&
-                          dummyData
-                              .any((e) => e['dummy_id'] == selectedDummyCode)
-                      ? selectedDummyCode
-                      : (dummyData.isNotEmpty
-                          ? dummyData.first['dummy_id'] as String
-                          : ''),
-                  selectedDummyCodes: selectedDummyCodes,
-                  onDummyCodeChanged: (code) => setState(() {
-                    selectedDummyCode = code;
-                  }),
-                  onRunPressed: runTestWithSavedWeights,
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
