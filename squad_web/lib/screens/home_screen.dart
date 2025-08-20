@@ -109,6 +109,12 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     await _sendApiRequest('/run-multi-test', queryParams);
   }
 
+  Future<void> exportDummyWeights() async {
+    setState(() {
+      log.add('>: [Export] Export 버튼 클릭됨. (API 연동 예정)');
+    });
+  }
+
   Future<void> _sendApiRequest(String path, dynamic queryParams) async {
     try {
       Uri uri;
@@ -307,7 +313,9 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                   Expanded(child: LogPanel(log: log)),
                   const SizedBox(height: 20),
                   _divider(),
-                  Expanded(child: ResultsPanel(dummyData: dummyData)),
+                  Expanded(
+                      child: ResultsPanel(
+                          dummyData: dummyData, onExport: exportDummyWeights)),
                 ],
               ),
             ),

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 class ResultsPanel extends StatelessWidget {
   final List<Map<String, dynamic>> dummyData;
+  final VoidCallback? onExport;
 
   const ResultsPanel({
     super.key,
     required this.dummyData,
+    this.onExport,
   });
 
   @override
@@ -45,6 +47,22 @@ class ResultsPanel extends StatelessWidget {
                   }).toList(),
                 ),
               ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: onExport ??
+                      () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Export 준비 중...')),
+                        );
+                      },
+                  icon: const Icon(Icons.save_alt),
+                  label: const Text('Export'),
+                ),
+              ],
             ),
           ],
         ),

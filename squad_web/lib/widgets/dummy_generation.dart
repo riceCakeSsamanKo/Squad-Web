@@ -81,8 +81,9 @@ class DummyGeneration extends StatelessWidget {
                                       value: dummy,
                                       groupValue: selectedDummyCode,
                                       onChanged: (val) {
-                                        if (val != null)
+                                        if (val != null) {
                                           onDummyCodeChanged(val);
+                                        }
                                       },
                                     ),
                                     Expanded(child: Text('Dummy#${idx + 1}')),
