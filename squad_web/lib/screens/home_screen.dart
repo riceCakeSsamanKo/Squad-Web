@@ -93,7 +93,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
           .join(','),
       'n_qubits': nQubitsController.text,
       'variant_counts': '3',
-      'sample_count': '10',
+      'sample_count': '5',
       'dummy_codes': selectedDummyCodes
           .map((code) => code == 'SE' ? 'encoder' : code)
           .join(','),
@@ -113,6 +113,185 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
     setState(() {
       log.add('>: [Export] Export 버튼 클릭됨. (API 연동 예정)');
     });
+  }
+
+  // 파일 업로드 테스트를 위한 추가 함수들
+  Future<void> testUploadWithSampleFile() async {
+    setState(() {
+      log.add('>: [Test] Starting sample Python file upload test...');
+    });
+
+    // 샘플 파이썬 코드 생성
+    const sampleCode = '''
+# 샘플 파이썬 파일
+class TestClass:
+    def __init__(self):
+        self.name = "test"
+        self.value = 42
+    
+    def get_info(self):
+        return f"Name: {self.name}, Value: {self.value}"
+
+if __name__ == "__main__":
+    obj = TestClass()
+    print(obj.get_info())
+''';
+
+    const filename = 'test_sample.py';
+    const content = sampleCode;
+    final size = utf8.encode(content).length;
+
+    log.add('>: [Test] Sample file creation completed');
+    log.add('>: [Test] Filename: $filename');
+    log.add('>: [Test] File size: ${(size / 1024).toStringAsFixed(2)} KB');
+
+    // 파일 업로드 실행
+    await uploadPythonFile(filename, content, size);
+  }
+
+  Future<void> listUploadedFiles() async {
+    setState(() {
+      log.add('>: [List] Fetching uploaded file list...');
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/file/list-files'),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final files = responseData['files'] as List<dynamic>? ?? [];
+
+        setState(() {
+          log.add('>: [List] ✅ File list retrieved successfully!');
+          log.add('>: [List] Found ${files.length} files total.');
+
+          if (files.isNotEmpty) {
+            for (final file in files) {
+              final filename = file['filename'] as String;
+              final fileSize = file['file_size'] as int;
+              final createdTime = DateTime.fromMillisecondsSinceEpoch(
+                  (file['created_time'] as double).round() * 1000);
+
+              log.add(
+                  '>: [List] 📁 $filename (${(fileSize / 1024).toStringAsFixed(2)} KB) - ${createdTime.toString().substring(0, 19)}');
+            }
+          } else {
+            log.add('>: [List] 📁 No uploaded files found.');
+          }
+        });
+      } else {
+        setState(() {
+          log.add(
+              '>: [List] ❌ Failed to retrieve file list: ${response.statusCode}');
+          log.add('>: [List] Error: ${response.body}');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        log.add('>: [List] ❌ Error occurred while retrieving file list: $e');
+      });
+    }
+  }
+
+  Future<void> deleteUploadedFile(String filename) async {
+    setState(() {
+      log.add('>: [Delete] Starting file deletion: $filename');
+    });
+
+    try {
+      final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/api/file/delete-file/$filename'),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        setState(() {
+          log.add('>: [Delete] ✅ File deleted successfully!');
+          log.add('>: [Delete] ${responseData['message']}');
+        });
+
+        // Refresh file list after deletion
+        await listUploadedFiles();
+      } else {
+        setState(() {
+          log.add('>: [Delete] ❌ File deletion failed: ${response.statusCode}');
+          log.add('>: [Delete] Error: ${response.body}');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        log.add('>: [Delete] ❌ Error occurred during file deletion: $e');
+      });
+    }
+  }
+
+  Future<void> uploadPythonFile(
+      String filename, String content, int size) async {
+    setState(() {
+      log.add('>: [Upload] Starting Python file upload...');
+      log.add(
+          '>: Filename: $filename, Size: ${(size / 1024).toStringAsFixed(2)} KB');
+    });
+
+    try {
+      // multipart/form-data 요청 생성
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://127.0.0.1:8000/api/file/upload-python'),
+      );
+
+      // 파일 내용을 바이트로 변환
+      var contentBytes = utf8.encode(content);
+
+      // MultipartFile 생성
+      var multipartFile = http.MultipartFile.fromBytes(
+        'file', // 백엔드에서 기대하는 필드명
+        contentBytes,
+        filename: filename,
+      );
+
+      // 파일 추가
+      request.files.add(multipartFile);
+
+      log.add(
+          '>: [Upload] MultipartFile created successfully, sending request...');
+
+      // 요청 전송 및 응답 대기
+      var streamedResponse = await request.send();
+
+      // Check response status code
+      log.add(
+          '>: [Upload] Response status code: ${streamedResponse.statusCode}');
+
+      // Read response body
+      var responseBody = await streamedResponse.stream.bytesToString();
+      log.add('>: [Upload] Response body: $responseBody');
+
+      // Process based on status code
+      if (streamedResponse.statusCode == 200) {
+        final responseData = jsonDecode(responseBody);
+        setState(() {
+          log.add('>: [Upload] ✅ Python file upload successful!');
+          log.add('>: Saved filename: ${responseData['filename']}');
+          log.add('>: File path: ${responseData['file_path']}');
+          log.add(
+              '>: File size: ${(responseData['file_size'] / 1024).toStringAsFixed(2)} KB');
+        });
+      } else {
+        setState(() {
+          log.add(
+              '>: [Upload] ❌ Upload failed: ${streamedResponse.statusCode}');
+          log.add('>: Error content: $responseBody');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        log.add('>: [Upload] ❌ Error occurred during upload: $e');
+        log.add('>: Error type: ${e.runtimeType}');
+      });
+    }
   }
 
   Future<void> _sendApiRequest(String path, dynamic queryParams) async {
@@ -243,6 +422,7 @@ class _QuantumHomePageState extends State<QuantumHomePage> {
                     onDummyCodeChanged: (code, val) {
                       // Dummy Code는 수동 선택 불가능
                     },
+                    onUploadPythonFile: uploadPythonFile,
                   ),
                   const SizedBox(height: 20),
                   _divider(),

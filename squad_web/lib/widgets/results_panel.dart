@@ -56,7 +56,8 @@ class ResultsPanel extends StatelessWidget {
                   onPressed: onExport ??
                       () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Export 준비 중...')),
+                          const SnackBar(
+                              content: Text('Export in progress...')),
                         );
                       },
                   icon: const Icon(Icons.save_alt),
